@@ -39,9 +39,10 @@ type swarm struct {
 }
 
 type bucket struct {
-	lastBucket         [bucketSize]string
-	lastBucketNewPeers int
-	lastBucketChurn    int
+	lastBucket                [bucketSize]string
+	lastBucketNewPeers        int
+	lastBucketNewPeersOffline int
+	lastBucketOffline         int
 }
 
 // Ipfs is the main structure for the IPFS node
@@ -194,7 +195,8 @@ func (i *Ipfs) GetBucket(peerID string, dim int) ([]string, error) {
 	// 		1. number of new peers in the bucket
 	// 		2. number of old peers no more reachables
 	i.bu.lastBucketNewPeers = 0
-	i.bu.lastBucketChurn = 0
+	i.bu.lastBucketNewPeersOffline = 0
+	i.bu.lastBucketOffline = 0
 OuterLoop:
 	for _, v := range i.bu.lastBucket {
 		if v == "" {
@@ -204,13 +206,14 @@ OuterLoop:
 			if v == k {
 				// This peer was in the old bucket
 				i.bu.lastBucketNewPeers++
-				continue OuterLoop
+				/* continue OuterLoop */
+				break
 			}
 		}
 		// Peer v isn't in the new bucket, still reachable?
 		// if the node isn't reachable function ID does not have a public ip address related
 		a, err := i.sh.ID(v)
-		i.bu.lastBucketChurn++
+		i.bu.lastBucketNewPeersOffline++
 		if err != nil || a == nil {
 			continue
 		}
@@ -221,10 +224,11 @@ OuterLoop:
 			ipAddr, _ := trimIpfsAddress(ipfsAddr)
 			netIPAddr := net.ParseIP(ipAddr)
 			if netIPAddr != nil && !isPrivateIP(netIPAddr) {
-				i.bu.lastBucketChurn--
-				break
+				i.bu.lastBucketNewPeersOffline--
+				continue OuterLoop
 			}
 		}
+		i.bu.lastBucketOffline++
 	}
 
 	i.bu.lastBucketNewPeers = 20 - i.bu.lastBucketNewPeers

@@ -15,7 +15,7 @@ const apiToken string = "2ea5eaba35e3dd"
 // Default parameters for the routine interval and the max number of executions
 // can be overwritten using command line arguments
 // @see usage
-var routineInterval time.Duration = 5 * time.Minute
+var routineInterval time.Duration = 1 * time.Hour
 var maxExecutions int = 72
 
 // If this is true and the script is run in privileged mode the pings statistics

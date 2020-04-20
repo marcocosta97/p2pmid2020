@@ -39,15 +39,16 @@ type rtt struct {
 
 // The JSON output data format
 type outputData struct {
-	DayTime        string
-	HourTime       string
-	ConnectedPeers int
-	ProtocolCount  *map[string]int
-	LocationCount  *map[string]int
-	Bucket         *[bucketSize]string
-	BucketChurn    int
-	BucketNewPeers int
-	RTTInfos       rtt
+	DayTime             string
+	HourTime            string
+	ConnectedPeers      int
+	ProtocolCount       *map[string]int
+	LocationCount       *map[string]int
+	Bucket              *[bucketSize]string
+	BucketChurn         int
+	BucketNewPeers      int
+	BucketChurnNewPeers int
+	RTTInfos            rtt
 }
 
 var db backupDB
@@ -61,7 +62,8 @@ func (d *outputData) initData(i *Ipfs) {
 	d.LocationCount = &i.sw.lastSwarmLocationCount
 	d.ProtocolCount = &i.sw.lastSwarmProcolCount
 	d.Bucket = &i.bu.lastBucket
-	d.BucketChurn = i.bu.lastBucketChurn
+	d.BucketChurn = i.bu.lastBucketOffline
+	d.BucketChurnNewPeers = i.bu.lastBucketNewPeersOffline
 	d.BucketNewPeers = i.bu.lastBucketNewPeers
 	if enablePings {
 		d.RTTInfos.AvgRTT = i.sw.avg / rttFormat
@@ -87,8 +89,8 @@ func writeDataFile(filename string, data []byte) {
 
 // Routine execution
 func routine(ipfs *Ipfs, i int) {
-	ipfs.GetSwarmPeers()
-	ipfs.GetSwarmInfos(i)
+	/* ipfs.GetSwarmPeers()
+	ipfs.GetSwarmInfos(i) */
 	ipfs.GetBucket(ipfs.selfID, bucketSize)
 
 	var d outputData
